@@ -5,33 +5,33 @@ import re
 def checkIngredients(ingredients):
     for ing in ingredients:
 
-        ing_name = ing.find(class_="wprm-recipe-ingredient-name").text
+        ing_name = ing.find(class_="wprm-recipe-ingredient-name").text.rstrip()
 
         if (ing.find(class_="wprm-recipe-ingredient-unit") is not None):
             try:
 
-                json_ing[ing_name] = {'amount':  int(ing.find(class_="wprm-recipe-ingredient-amount").text) , 'unit': ing.find(class_="wprm-recipe-ingredient-unit").text}
+                json_ing[ing_name] = {'amount':  int(ing.find(class_="wprm-recipe-ingredient-amount").text.rstrip()) , 'unit': ing.find(class_="wprm-recipe-ingredient-unit").text.rstrip()}
             except ValueError:
                 if('-' in ing.find(class_="wprm-recipe-ingredient-amount").text):
                     temp = ing.find(class_="wprm-recipe-ingredient-amount").text.split('-')[0]
                     json_ing[ing.find(class_="wprm-recipe-ingredient-name").text] = {
                         'amount': int(temp),
-                        'unit': ing.find(class_="wprm-recipe-ingredient-unit").text}
+                        'unit': ing.find(class_="wprm-recipe-ingredient-unit").text.rstrip()}
                 elif ('/' in ing.find(class_="wprm-recipe-ingredient-amount").text):
                     temp = ing.find(class_="wprm-recipe-ingredient-amount").text.split('/')[0]
-                    json_ing[ing.find(class_="wprm-recipe-ingredient-name").text] = {
+                    json_ing[ing.find(class_="wprm-recipe-ingredient-name").text.rstrip()] = {
                         'amount': int(temp),
-                        'unit': ing.find(class_="wprm-recipe-ingredient-unit").text}
+                        'unit': ing.find(class_="wprm-recipe-ingredient-unit").text.rstrip()}
                 else:
-                    json_ing[ing.find(class_="wprm-recipe-ingredient-name").text] = {
-                     'amount': ing.find(class_="wprm-recipe-ingredient-amount").text,
-                     'unit': ing.find(class_="wprm-recipe-ingredient-unit").text}
+                    json_ing[ing.find(class_="wprm-recipe-ingredient-name").text.rstrip()] = {
+                     'amount': ing.find(class_="wprm-recipe-ingredient-amount").text.rstrip(),
+                     'unit': ing.find(class_="wprm-recipe-ingredient-unit").text.rstrip()}
 
         elif(ing.find(class_="wprm-recipe-ingredient-amount") is not None) :
             try:
-                json_ing[ing_name] = {'amount' : int(ing.find(class_="wprm-recipe-ingredient-amount").text) }
+                json_ing[ing_name] = {'amount' : int(ing.find(class_="wprm-recipe-ingredient-amount").text.rstrip()) }
             except ValueError:
-                json_ing[ing_name] = {'amount' : ing.find(class_="wprm-recipe-ingredient-amount").text }
+                json_ing[ing_name] = {'amount' : ing.find(class_="wprm-recipe-ingredient-amount").text.rstrip() }
 
 
 def add_into_file(json_ing):
@@ -41,27 +41,27 @@ def add_into_file(json_ing):
 
         for name,value in json_ing.items():
             if name in data.keys():
-                print(name,data[name],value)
                 for each_val in range(0,len(data[name])):
                     try:
                         all_units = [x['unit'] for x in data[name]]
                         if(value['unit'] not in all_units):
                             data[name].append(value)
-                        elif data[name][each_val]['unit'] == value['unit'] and type(value['amount']) is int:
-                            #print(name,data[name])
-                            #print(value)
+                        elif data[name][each_val]['unit'] == value['unit'] and (type(value['amount']) is int and type(data[name][each_val]['amount'] is int)) :
                             data[name][each_val]['amount'] += value['amount']
-                        elif value['amount'] == 'putina':
-                            data[name][each_val]['amount'] = 'multa'
+                        elif type(value['amount']) is str:
+                            data[name].append(value)
+                            break
                     except KeyError:
-                        print(name,type(data[name][each_val]['amount']) , type(value['amount']))
                         if type(value['amount']) is int and type(data[name][each_val]['amount']) is int:
                             data[name][each_val]['amount'] += value['amount']
                         elif value['amount'] == 'putina' or value['amount'] == 'putina ':
                             data[name][each_val]['amount'] = 'multa'
                         elif type(value['amount'])is str and type(data[name][each_val]['amount']) is str:
                             data[name].append(value)
-
+                            break
+                    except TypeError:
+                        #print(name,data[name],value,each_val,type(data[name]) ,type(value['amount']))
+                        pass
             else:
                 data[name] = []
                 data[name].append(value)
